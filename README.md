@@ -1,73 +1,111 @@
-# React + TypeScript + Vite
+# Matrix Share
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+P2P file sharing over [Matrix](https://matrix.org), built with [Tauri v2](https://tauri.app). Uses [Iroh](https://iroh.computer) for direct peer-to-peer transfers with automatic Matrix to-device fallback.
 
-Currently, two official plugins are available:
+## How It Works
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+1. **Sender** offers a file to a Matrix room (E2EE encrypted event)
+2. **Receiver** sees the offer and requests download
+3. Transfer happens via **Iroh P2P** (direct, fast) or falls back to **Matrix to-device messages** (chunked, works through NAT)
 
-## React Compiler
+All signaling goes through Matrix with end-to-end encryption. File data travels peer-to-peer when possible.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Features
 
-## Expanding the ESLint configuration
+- Desktop GUI with drag-and-drop file sharing
+- Full CLI for headless/scripted use
+- Iroh P2P with QUIC and NAT traversal
+- Automatic fallback to Matrix chunked transfer
+- E2EE — file offers are encrypted room events
+- SHA-256 verification on all transfers
+- Standalone Iroh mode (no Matrix needed)
+- Session persistence across restarts
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Screenshots
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+*GUI: Room view with file offers and transfer progress*
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Prerequisites
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- [Node.js](https://nodejs.org) (v18+)
+- [Rust](https://rustup.rs) (2021 edition)
+- Tauri v2 system dependencies ([see docs](https://v2.tauri.app/start/prerequisites/))
+- Access to a Matrix homeserver
+
+## Build & Run
+
+```bash
+# Install frontend dependencies
+npm install
+
+# Development (GUI with hot reload)
+npm run tauri dev
+
+# Production build
+npm run tauri build
+
+# CLI only (no GUI needed)
+cd src-tauri
+cargo build
+./target/debug/matrix-fileshare --help
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## CLI Usage
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+```bash
+# Login (creates persistent session)
+matrix-fileshare login <homeserver> <username> <password>
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# List your rooms
+matrix-fileshare rooms <homeserver> <username> <password>
+
+# List file offers in a room
+matrix-fileshare offers <homeserver> <username> <password> <room_id>
+
+# Share a file (stays running to serve requests)
+matrix-fileshare share <homeserver> <username> <password> <room_id> <file_path> [-d "description"]
+
+# Download a file by offer ID
+matrix-fileshare download <homeserver> <username> <password> <room_id> <offer_id> <save_dir>
+
+# Direct P2P (no Matrix needed)
+matrix-fileshare iroh-serve <file_path>    # prints ticket
+matrix-fileshare iroh-get <ticket> <save_path>
 ```
+
+## Architecture
+
+```
+┌─────────────────────────────────┐
+│         React Frontend          │
+│  (Tailwind, React Router, Vite) │
+└──────────────┬──────────────────┘
+               │ Tauri invoke / events
+┌──────────────┴──────────────────┐
+│          Rust Backend           │
+│                                 │
+│  matrix-sdk ──── E2EE signaling │
+│  iroh ────────── P2P transfer   │
+│  transfer.rs ─── Matrix chunks  │
+└─────────────────────────────────┘
+```
+
+**Transfer flow:**
+
+1. Sender creates an Iroh blob ticket and posts a `com.fileshare.offer` event to the room
+2. Receiver attempts Iroh P2P download (10s timeout)
+3. If Iroh fails, falls back to `com.fileshare.request` + `com.fileshare.chunk` via Matrix to-device messages (48KB chunks, 4 concurrent)
+4. SHA-256 hash verified on completion
+
+**Key dependencies:**
+
+| Crate | Purpose |
+|-------|---------|
+| `matrix-sdk 0.10` | Matrix client with E2EE + SQLite store |
+| `iroh 0.96` / `iroh-blobs 0.98` | P2P file transfer over QUIC |
+| `tauri 2` | Desktop app shell |
+| `clap 4` | CLI argument parsing |
+
+## License
+
+MIT
