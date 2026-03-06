@@ -50,6 +50,40 @@ cargo build
 ./target/debug/matrix-fileshare --help
 ```
 
+## GUI Usage
+
+### 1. Launch
+
+```bash
+npm run tauri dev        # development
+# or
+npm run tauri build      # then run the built app from src-tauri/target/release/
+```
+
+### 2. Sign In
+
+Enter your Matrix homeserver URL (e.g. `https://matrix.org`), username, and password. The app will log in, initialize Iroh P2P, and start syncing.
+
+### 3. Select a Room
+
+Your joined rooms appear in the left sidebar. Click one to open it. The main panel shows all file offers shared in that room.
+
+### 4. Share a File
+
+Two ways:
+- **Click "Share File"** at the bottom of the room view to open a file picker
+- **Drag and drop** a file anywhere into the window
+
+The file is offered to the room as an encrypted event. Your app stays available to serve the file to anyone who requests it.
+
+### 5. Download a File
+
+Click the **download button** on any file offer from another user. You'll be prompted to choose where to save it. The transfer starts automatically — Iroh P2P first, Matrix fallback if needed.
+
+### 6. Transfer Progress
+
+Active transfers show a circular progress indicator with bytes transferred. Completed transfers turn green, failed ones turn red with an error message.
+
 ## CLI Usage
 
 ```bash
