@@ -5,7 +5,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import type { RoomSummary, FileOfferData, FileOffer } from "../types";
+import type { RoomSummary, FileOfferData, FileOffer, MemberInfo } from "../types";
 
 export type { RoomSummary };
 
@@ -60,6 +60,7 @@ export function useFileOffers(isConnected: boolean, roomId: string | null) {
           description: d.description || undefined,
           senderOnline: true,
           irohTicket: d.iroh_ticket || undefined,
+          targetUser: d.target_user || undefined,
         }))
       );
     } catch (err) {
@@ -83,4 +84,21 @@ export function useFileOffers(isConnected: boolean, roomId: string | null) {
   }, [fetchOffers, isConnected]);
 
   return offers;
+}
+
+export function useRoomMembers(isConnected: boolean, roomId: string | null) {
+  const [members, setMembers] = useState<MemberInfo[]>([]);
+
+  useEffect(() => {
+    if (!isConnected || !roomId) {
+      setMembers([]);
+      return;
+    }
+
+    invoke<MemberInfo[]>("get_room_members", { roomId })
+      .then(setMembers)
+      .catch(console.error);
+  }, [isConnected, roomId]);
+
+  return members;
 }

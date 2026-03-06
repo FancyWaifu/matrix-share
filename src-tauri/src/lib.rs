@@ -5,7 +5,7 @@ pub mod matrix_client;
 mod state;
 mod transfer;
 
-use state::{AppState, FileOfferData, RoomSummary, SharedState};
+use state::{AppState, FileOfferData, MemberInfo, RoomSummary, SharedState};
 use std::sync::Arc;
 use tauri::{AppHandle, State};
 use tracing::{info, warn};
@@ -41,6 +41,14 @@ async fn get_rooms(state: State<'_, SharedState>) -> Result<Vec<RoomSummary>, St
 }
 
 #[tauri::command]
+async fn get_room_members(
+    room_id: String,
+    state: State<'_, SharedState>,
+) -> Result<Vec<MemberInfo>, String> {
+    matrix_client::get_room_members(&state, &room_id).await
+}
+
+#[tauri::command]
 async fn get_file_offers(
     room_id: String,
     state: State<'_, SharedState>,
@@ -53,9 +61,10 @@ async fn offer_file(
     room_id: String,
     file_path: String,
     description: Option<String>,
+    target_user: Option<String>,
     state: State<'_, SharedState>,
 ) -> Result<String, String> {
-    matrix_client::offer_file(&state, &room_id, &file_path, description).await
+    matrix_client::offer_file(&state, &room_id, &file_path, description, target_user).await
 }
 
 #[tauri::command]
@@ -185,6 +194,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             login,
             get_rooms,
+            get_room_members,
             get_file_offers,
             offer_file,
             request_file,

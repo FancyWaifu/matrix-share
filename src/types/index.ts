@@ -39,6 +39,14 @@ export interface FileOffer {
   description?: string;
   senderOnline: boolean;
   irohTicket?: string;
+  targetUser?: string;
+}
+
+// --- Room Member ---
+
+export interface MemberInfo {
+  user_id: string;
+  display_name?: string;
 }
 
 // --- Room Summary ---
@@ -66,6 +74,7 @@ export interface FileOfferData {
   sender_device_id?: string;
   room_id: string;
   iroh_ticket?: string;
+  target_user?: string;
 }
 
 export interface TransferProgressEvent {

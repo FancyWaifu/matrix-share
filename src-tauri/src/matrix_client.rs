@@ -332,6 +332,32 @@ pub async fn get_rooms(state: &AppState) -> Result<Vec<RoomSummary>, String> {
     Ok(rooms)
 }
 
+pub async fn get_room_members(
+    state: &AppState,
+    room_id: &str,
+) -> Result<Vec<MemberInfo>, String> {
+    let client_guard = state.client.read().await;
+    let client = client_guard.as_ref().ok_or("Not logged in")?;
+
+    let room_id = OwnedRoomId::try_from(room_id)
+        .map_err(|e| format!("Invalid room ID: {}", e))?;
+
+    let room = client.get_room(&room_id).ok_or("Room not found")?;
+
+    let members = room
+        .members(matrix_sdk::RoomMemberships::JOIN)
+        .await
+        .map_err(|e| format!("Failed to get members: {}", e))?;
+
+    Ok(members
+        .iter()
+        .map(|m| MemberInfo {
+            user_id: m.user_id().to_string(),
+            display_name: m.display_name().map(|s| s.to_string()),
+        })
+        .collect())
+}
+
 pub async fn get_file_offers(
     state: &AppState,
     room_id: &str,
@@ -385,6 +411,7 @@ pub async fn get_file_offers(
                                 sender_device_id: offer_content.sender_device_id,
                                 room_id: room_id.to_string(),
                                 iroh_ticket: offer_content.iroh_ticket,
+                                target_user: offer_content.target_user,
                             });
                         }
                     }
@@ -406,6 +433,7 @@ pub async fn offer_file(
     room_id: &str,
     file_path: &str,
     description: Option<String>,
+    target_user: Option<String>,
 ) -> Result<String, String> {
     let client_guard = state.client.read().await;
     let client = client_guard.as_ref().ok_or("Not logged in")?;
@@ -458,6 +486,7 @@ pub async fn offer_file(
         description,
         sender_device_id: device_id,
         iroh_ticket: iroh_ticket.clone(),
+        target_user,
     };
 
     let raw_content = serde_json::to_value(&content)
@@ -640,6 +669,7 @@ pub async fn start_sync(app_handle: AppHandle, state: Arc<AppState>) {
                                             sender_device_id: offer_content.sender_device_id,
                                             room_id: room_id.to_string(),
                                             iroh_ticket: offer_content.iroh_ticket,
+                                            target_user: offer_content.target_user,
                                         };
                                         let _ = app.emit("file-offer", &offer_data);
                                     }

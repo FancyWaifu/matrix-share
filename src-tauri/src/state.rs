@@ -27,6 +27,7 @@ pub struct FileOfferData {
     pub sender_device_id: Option<String>,
     pub room_id: String,
     pub iroh_ticket: Option<String>,
+    pub target_user: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -80,6 +81,12 @@ impl AppState {
             iroh_endpoint: Mutex::new(None),
         }
     }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MemberInfo {
+    pub user_id: String,
+    pub display_name: Option<String>,
 }
 
 pub type SharedState = Arc<AppState>;

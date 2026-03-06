@@ -125,8 +125,21 @@ export function FileOfferCard({
         )}
 
         {isOwnOffer && !hasActiveTransfer && !isComplete && (
-          <div className="flex-shrink-0 text-xs text-slate-500 py-1.5 px-2 bg-white/[0.04] rounded-lg">
-            Shared
+          <div className="flex-shrink-0 flex flex-col items-end gap-1">
+            <div className="text-xs text-slate-500 py-1.5 px-2 bg-white/[0.04] rounded-lg">
+              Shared
+            </div>
+            {offer.targetUser && (
+              <div className="text-[10px] text-purple-400 py-0.5 px-1.5 bg-purple-500/10 border border-purple-500/20 rounded">
+                Direct
+              </div>
+            )}
+          </div>
+        )}
+
+        {!isOwnOffer && offer.targetUser && !hasActiveTransfer && !isComplete && (
+          <div className="flex-shrink-0 text-[10px] text-purple-400 py-0.5 px-1.5 bg-purple-500/10 border border-purple-500/20 rounded self-start">
+            Direct
           </div>
         )}
       </div>

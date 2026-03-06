@@ -1,6 +1,7 @@
-import type { FileOffer, Transfer } from "../types";
+import type { FileOffer, Transfer, MemberInfo } from "../types";
 import { FileOfferCard } from "./FileOffer";
 import { FileSend } from "./FileSend";
+import { MemberBar } from "./MemberBar";
 import { TransferHistory } from "./TransferHistory";
 
 interface RoomProps {
@@ -9,7 +10,8 @@ interface RoomProps {
   transfers: Map<string, Transfer>;
   currentUserId: string;
   roomId: string;
-  onOfferFile: (roomId: string, filePath: string, description?: string) => Promise<void>;
+  members: MemberInfo[];
+  onOfferFile: (roomId: string, filePath: string, description?: string, targetUser?: string) => Promise<void>;
   onRequestFile: (offer: FileOffer) => void;
 }
 
@@ -19,9 +21,18 @@ export function Room({
   transfers,
   currentUserId,
   roomId,
+  members,
   onOfferFile,
   onRequestFile,
 }: RoomProps) {
+  // Filter offers: show room-wide offers, offers targeted at us, and our own targeted offers
+  const visibleOffers = offers.filter(
+    (o) =>
+      !o.targetUser ||
+      o.targetUser === currentUserId ||
+      o.senderUserId === currentUserId
+  );
+
   return (
     <div className="flex flex-col h-full">
       {/* Room header */}
@@ -29,9 +40,18 @@ export function Room({
         <h2 className="text-white font-medium text-sm">{roomName}</h2>
       </div>
 
+      {/* Member bar */}
+      <MemberBar
+        members={members}
+        currentUserId={currentUserId}
+        onSendToUser={(userId, filePath) =>
+          onOfferFile(roomId, filePath, undefined, userId)
+        }
+      />
+
       {/* File offers list */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
-        {offers.length === 0 ? (
+        {visibleOffers.length === 0 ? (
           <div className="text-center py-16">
             <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center">
               <svg className="w-7 h-7 text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -45,7 +65,7 @@ export function Room({
             </p>
           </div>
         ) : (
-          offers.map((offer) => (
+          visibleOffers.map((offer) => (
             <FileOfferCard
               key={offer.offerId}
               offer={offer}
@@ -57,7 +77,7 @@ export function Room({
         )}
 
         {/* Transfer history */}
-        {offers.length > 0 && (
+        {visibleOffers.length > 0 && (
           <TransferHistory transfers={transfers} roomId={roomId} />
         )}
       </div>

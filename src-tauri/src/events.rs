@@ -18,6 +18,8 @@ pub struct FileOfferContent {
     pub sender_device_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub iroh_ticket: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub target_user: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

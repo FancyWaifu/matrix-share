@@ -177,7 +177,7 @@ async fn cmd_share(
     println!("Syncing...");
     do_initial_sync(&state).await?;
 
-    let offer_id = matrix_client::offer_file(&state, room_id, file_path, description).await?;
+    let offer_id = matrix_client::offer_file(&state, room_id, file_path, description, None).await?;
     println!("File offered with ID: {}", offer_id);
     println!("Waiting for download requests... (Ctrl+C to stop)");
 

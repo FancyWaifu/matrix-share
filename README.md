@@ -2,6 +2,8 @@
 
 P2P file sharing over [Matrix](https://matrix.org), built with [Tauri v2](https://tauri.app). Uses [Iroh](https://iroh.computer) for direct peer-to-peer transfers with automatic Matrix to-device fallback.
 
+> **Note:** This software is experimental and still needs more testing. Expect rough edges, bugs, and breaking changes.
+
 ## How It Works
 
 1. **Sender** offers a file to a Matrix room (E2EE encrypted event)

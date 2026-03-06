@@ -86,12 +86,13 @@ export function useTransfer(isConnected: boolean) {
 
   // Offer file using a native file path
   const offerFileNative = useCallback(
-    async (roomId: string, filePath: string, description?: string) => {
+    async (roomId: string, filePath: string, description?: string, targetUser?: string) => {
       try {
         const offerId = await invoke<string>("offer_file", {
           roomId,
           filePath,
           description: description || null,
+          targetUser: targetUser || null,
         });
 
         const filename = filePath.split("/").pop() || filePath.split("\\").pop() || "file";

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useMatrix } from "./hooks/useMatrix";
-import { useRooms, useFileOffers } from "./hooks/useRooms";
+import { useRooms, useFileOffers, useRoomMembers } from "./hooks/useRooms";
 import { useTransfer } from "./hooks/useTransfer";
 import { Login } from "./components/Login";
 import { Layout } from "./components/Layout";
@@ -14,6 +14,7 @@ export default function App() {
   const rooms = useRooms(isConnected);
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const offers = useFileOffers(isConnected, selectedRoomId);
+  const members = useRoomMembers(isConnected, selectedRoomId);
   const { transfers, offerFileNative, requestFile } = useTransfer(isConnected);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -108,6 +109,7 @@ export default function App() {
             transfers={transfers}
             currentUserId={userId || ""}
             roomId={selectedRoomId}
+            members={members}
             onOfferFile={offerFileNative}
             onRequestFile={requestFile}
           />
