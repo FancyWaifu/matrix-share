@@ -105,7 +105,3 @@ matrix-fileshare iroh-get <ticket> <save_path>
 | `iroh 0.96` / `iroh-blobs 0.98` | P2P file transfer over QUIC |
 | `tauri 2` | Desktop app shell |
 | `clap 4` | CLI argument parsing |
-
-## License
-
-MIT
